@@ -1,0 +1,91 @@
+---
+title: "Lab 3"
+author: "update with team name"
+date: "fill in date"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Team Info
+Each team member should edit to add their info below and be able to merge, pull and push changes successfully  by the end of lab.  WHen you push your code to github, you will see a Passing Badge on the README page of the repo if your code runs successfully in `werker`.
+
+
+Team [add number]
+
+Name:
+email: 
+netid:
+github username:
+Department:
+Background:
+
+
+## Logistic Regression in R
+
+The lab material is based on [Chapter 4 Lab from ISLR](http://www-bcf.usc.edu/~gareth/ISL/Chapter%204%20Lab.txt). Let's first lok at the Stock Market data. Please go to the help documents of ISLR and read the descriptions of the 9 variables of `Smarket`.
+
+```{r}
+library(ISLR)
+names(Smarket)
+dim(Smarket)
+summary(Smarket)
+```
+
+Some EDA.
+```{r ggpairs, cache = TRUE}
+library(GGally)
+ggpairs(Smarket)
+```
+
+Let's look at the correlations between these variables. Note the `cor` only works on numeric variables.
+```{r}
+try(cor(Smarket))[1]
+cor(Smarket[,-9])
+```
+
+```{r}
+attach(Smarket)
+plot(Volume)
+```
+
+Let's fit a logistic regression model to predict `Direction`. We start by using the `Lag1` to `Lag5` and `Volume`.
+```{r}
+glm.fits=glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,data=Smarket,family=binomial)
+summary(glm.fits)
+coef(glm.fits)
+summary(glm.fits)$coef
+summary(glm.fits)$coef[,4] # closer look at the p-values
+```
+
+How well does the model fits the data?
+```{r}
+glm.probs=predict(glm.fits,type="response")
+glm.probs[1:10]
+glm.pred=rep("Down",1250)
+glm.pred[glm.probs>.5]="Up"
+table(glm.pred,Direction)
+(507+145)/1250
+mean(glm.pred==Direction)
+```
+
+Split the dataset into training set and testing set and see how well is the out-of-sample classification. The classification error in the testing set is 0.52, which is above 0.5. This means that the out-of-sample prediction is terrible.
+```{r}
+train=(Year<2005) # training set
+Smarket.2005=Smarket[!train,] # testing set
+dim(Smarket.2005)
+Direction.2005=Direction[!train]
+glm.fits=glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,data=Smarket,family=binomial,subset=train)
+glm.probs=predict(glm.fits,Smarket.2005,type="response")
+glm.pred=rep("Down",252)
+glm.pred[glm.probs>.5]="Up"
+table(glm.pred,Direction.2005)
+mean(glm.pred==Direction.2005)
+mean(glm.pred!=Direction.2005)
+```
+
+Maybe simplifying the model will help. Try fitting the model with only `Lag1` and `Lag2` on the training set, and then print a contingency table of observations vs. predictions. What is the classification error?
