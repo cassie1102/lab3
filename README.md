@@ -6,7 +6,6 @@ Topics:
 
 * glm and binary regression  - Example from ISLR
 
-* wercker demo with Lab3
 
 *  Q & A about HW or other topics
 
